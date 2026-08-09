@@ -9,12 +9,22 @@ const api = axios.create({
   },
 });
 
-export const checkHealth = async () => {
+export const fetchHealth = async () => {
   try {
     const response = await api.get('/health');
     return response.data;
   } catch (error) {
-    console.error('Mobile health check error:', error.message);
+    console.error('[Mobile API Error] fetchHealth:', error.message);
+    throw error;
+  }
+};
+
+export const fetchMessages = async (limit = 50) => {
+  try {
+    const response = await api.get(`/api/messages?limit=${limit}`);
+    return response.data;
+  } catch (error) {
+    console.error('[Mobile API Error] fetchMessages:', error.message);
     throw error;
   }
 };
