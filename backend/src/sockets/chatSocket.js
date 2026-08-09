@@ -8,11 +8,14 @@ import { SOCKET_EVENTS } from './socketEvents.js';
  * @param {import('http').Server} server 
  */
 export const initSocket = (server) => {
-  const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+  const rawClientUrl = process.env.CLIENT_URL || '*';
+  const corsOrigin = rawClientUrl === '*'
+    ? '*'
+    : (rawClientUrl.includes(',') ? rawClientUrl.split(',').map((url) => url.trim()) : rawClientUrl);
 
   const io = new Server(server, {
     cors: {
-      origin: clientUrl,
+      origin: corsOrigin,
       methods: ['GET', 'POST'],
     },
   });
