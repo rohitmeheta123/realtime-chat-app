@@ -2,14 +2,21 @@ import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import ConnectionStatus from './ConnectionStatus';
 
-const ChatHeader = ({ username, status, onLeave }) => {
+const ChatHeader = ({ username, status, onlineUsers = [], onLeave }) => {
+  const onlineCount = onlineUsers.length;
+
   return (
     <View style={styles.header}>
       <View style={styles.left}>
         <Text style={styles.title}>Real-Time Chat</Text>
-        <Text style={styles.subtitle}>
-          You are chatting as <Text style={styles.usernameHighlight}>{username}</Text>
-        </Text>
+        <View style={styles.subRow}>
+          <Text style={styles.subtitle}>
+            You are chatting as <Text style={styles.usernameHighlight}>{username}</Text>
+          </Text>
+          <Text style={styles.onlineBadge}>
+            🟢 {onlineCount} online
+          </Text>
+        </View>
       </View>
       <View style={styles.right}>
         <ConnectionStatus status={status} />
@@ -42,13 +49,23 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#ffffff',
   },
+  subRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+    gap: 8,
+  },
   subtitle: {
     fontSize: 12,
     color: '#94a3b8',
-    marginTop: 2,
   },
   usernameHighlight: {
     color: '#818cf8',
+    fontWeight: '600',
+  },
+  onlineBadge: {
+    fontSize: 11,
+    color: '#34d399',
     fontWeight: '600',
   },
   right: {

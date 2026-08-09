@@ -5,12 +5,17 @@ import MessageInput from '../components/MessageInput';
 import { useChat } from '../hooks/useChat';
 
 const ChatPage = ({ username, onSwitchUser }) => {
-  const { messages, connectionStatus, isLoading, error, sendMessage } = useChat(username);
+  const { messages, onlineUsers, connectionStatus, isLoading, error, sendMessage } = useChat(username);
 
   return (
     <div style={styles.wrapper}>
       <div style={styles.chatCard}>
-        <ChatHeader username={username} status={connectionStatus} onLeave={onSwitchUser} />
+        <ChatHeader
+          username={username}
+          status={connectionStatus}
+          onlineUsers={onlineUsers}
+          onLeave={onSwitchUser}
+        />
         <MessageList
           messages={messages}
           currentUsername={username}

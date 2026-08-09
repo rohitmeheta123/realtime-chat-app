@@ -11,7 +11,7 @@ import MessageInput from '../components/MessageInput';
 import { useChat } from '../hooks/useChat';
 
 const ChatScreen = ({ username, onSwitchUser }) => {
-  const { messages, connectionStatus, isLoading, error, sendMessage } = useChat(username);
+  const { messages, onlineUsers, connectionStatus, isLoading, error, sendMessage } = useChat(username);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -19,7 +19,12 @@ const ChatScreen = ({ username, onSwitchUser }) => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}
       >
-        <ChatHeader username={username} status={connectionStatus} onLeave={onSwitchUser} />
+        <ChatHeader
+          username={username}
+          status={connectionStatus}
+          onlineUsers={onlineUsers}
+          onLeave={onSwitchUser}
+        />
         <MessageList
           messages={messages}
           currentUsername={username}

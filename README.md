@@ -4,8 +4,6 @@
 
 This project is a multi-platform real-time chat application built as a technical assignment. It features a shared Node.js/Express backend communicating with both a React Web client (Vite) and a React Native Mobile client (Expo) using REST APIs and Socket.io for real-time bidirectional communication.
 
-*Note: This repository currently contains the **initial project architecture, containerization setup, and health check implementation**. Full messaging UI, persistence, and real-time events will be implemented in subsequent phases.*
-
 ---
 
 ## Tech Stack
@@ -33,9 +31,11 @@ realtime-chat-app/
 │   │   ├── routes/
 │   │   │   └── messageRoutes.js
 │   │   ├── services/
-│   │   │   └── messageService.js
+│   │   │   ├── messageService.js
+│   │   │   └── onlineUsersService.js
 │   │   ├── sockets/
-│   │   │   └── chatSocket.js
+│   │   │   ├── chatSocket.js
+│   │   │   └── socketEvents.js
 │   │   ├── app.js
 │   │   └── server.js
 │   │
@@ -49,12 +49,20 @@ realtime-chat-app/
 ├── web/
 │   ├── src/
 │   │   ├── components/
+│   │   │   ├── ChatHeader.jsx
+│   │   │   ├── ConnectionStatus.jsx
+│   │   │   ├── MessageBubble.jsx
+│   │   │   ├── MessageInput.jsx
+│   │   │   └── MessageList.jsx
 │   │   ├── pages/
+│   │   │   └── ChatPage.jsx
 │   │   ├── services/
 │   │   │   ├── api.js
 │   │   │   └── socket.js
 │   │   ├── hooks/
+│   │   │   └── useChat.js
 │   │   ├── utils/
+│   │   │   └── formatTime.js
 │   │   ├── index.css
 │   │   ├── App.jsx
 │   │   └── main.jsx
@@ -71,12 +79,21 @@ realtime-chat-app/
 ├── mobile/
 │   ├── src/
 │   │   ├── components/
+│   │   │   ├── ChatHeader.js
+│   │   │   ├── ConnectionStatus.js
+│   │   │   ├── MessageBubble.js
+│   │   │   ├── MessageInput.js
+│   │   │   └── MessageList.js
 │   │   ├── screens/
+│   │   │   ├── ChatScreen.js
+│   │   │   └── UsernameScreen.js
 │   │   ├── services/
 │   │   │   ├── api.js
 │   │   │   └── socket.js
 │   │   ├── hooks/
+│   │   │   └── useChat.js
 │   │   └── utils/
+│   │       └── formatTime.js
 │   │
 │   ├── assets/
 │   ├── app.json
@@ -167,3 +184,13 @@ Scan the QR code with **Expo Go** on an Android/iOS device or press `a` / `i` to
 - **Mobile → Backend**: Communicates via Axios HTTP requests and Socket.io client over host LAN network.
 - **Backend → MongoDB**: Persists chat data via Mongoose ODM connected to the `realtime_chat` database.
 - **Web/Mobile → Socket.io → Backend**: Real-time event transport layer.
+
+---
+
+## Online User Status
+
+- Online user state is maintained purely in backend memory using `onlineUsersService.js` (`socketId -> username` and `username -> Set<socketId>`).
+- Persistent message history remains in MongoDB; online/offline state is strictly transient and in-memory.
+- Multiple active sockets per username (e.g. Web browser tab + Mobile app) are tracked cleanly.
+- A user is marked `user_online` when their 1st socket connects, and marked `user_offline` only when their last remaining active socket disconnects.
+- Restarting the backend resets the transient online registry; connected clients automatically re-register via `join_chat` upon Socket.io reconnection.

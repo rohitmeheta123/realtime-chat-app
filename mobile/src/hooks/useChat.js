@@ -4,6 +4,7 @@ import { getSocket } from '../services/socket';
 
 export const useChat = (username) => {
   const [messages, setMessages] = useState([]);
+  const [onlineUsers, setOnlineUsers] = useState([]);
   const [connectionStatus, setConnectionStatus] = useState('connecting'); // 'connecting' | 'connected' | 'disconnected'
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -37,15 +38,20 @@ export const useChat = (username) => {
     const socket = getSocket();
     socketRef.current = socket;
 
+    const registerUser = () => {
+      setConnectionStatus('connected');
+      socket.emit('join_chat', { username });
+    };
+
     if (!socket.connected) {
       setConnectionStatus('connecting');
       socket.connect();
     } else {
-      setConnectionStatus('connected');
+      registerUser();
     }
 
     const onConnect = () => {
-      setConnectionStatus('connected');
+      registerUser();
     };
 
     const onDisconnect = () => {
@@ -58,7 +64,6 @@ export const useChat = (username) => {
 
     const onNewMessage = (newMsg) => {
       setMessages((prev) => {
-        // Prevent duplicate messages if message already exists in state
         if (prev.some((m) => m._id === newMsg._id)) {
           return prev;
         }
@@ -66,16 +71,39 @@ export const useChat = (username) => {
       });
     };
 
+    const onOnlineUsers = (data) => {
+      setOnlineUsers(data?.users || []);
+    };
+
+    const onUserOnline = (data) => {
+      if (!data?.username) return;
+      setOnlineUsers((prev) => {
+        if (prev.includes(data.username)) return prev;
+        return [...prev, data.username];
+      });
+    };
+
+    const onUserOffline = (data) => {
+      if (!data?.username) return;
+      setOnlineUsers((prev) => prev.filter((u) => u !== data.username));
+    };
+
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on('connect_error', onConnectError);
     socket.on('new_message', onNewMessage);
+    socket.on('online_users', onOnlineUsers);
+    socket.on('user_online', onUserOnline);
+    socket.on('user_offline', onUserOffline);
 
     return () => {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
       socket.off('connect_error', onConnectError);
       socket.off('new_message', onNewMessage);
+      socket.off('online_users', onOnlineUsers);
+      socket.off('user_online', onUserOnline);
+      socket.off('user_offline', onUserOffline);
     };
   }, [username, loadHistory]);
 
@@ -107,6 +135,7 @@ export const useChat = (username) => {
 
   return {
     messages,
+    onlineUsers,
     connectionStatus,
     isLoading,
     error,

@@ -1,14 +1,22 @@
 import React from 'react';
 import ConnectionStatus from './ConnectionStatus';
 
-const ChatHeader = ({ username, status, onLeave }) => {
+const ChatHeader = ({ username, status, onlineUsers = [], onLeave }) => {
+  const onlineCount = onlineUsers.length;
+
   return (
     <header style={styles.header}>
       <div style={styles.left}>
         <h1 style={styles.title}>Real-Time Chat</h1>
-        <p style={styles.userText}>
-          You are chatting as <strong style={styles.usernameHighlight}>{username}</strong>
-        </p>
+        <div style={styles.subRow}>
+          <span style={styles.userText}>
+            You are chatting as <strong style={styles.usernameHighlight}>{username}</strong>
+          </span>
+          <span style={styles.divider}>•</span>
+          <span style={styles.onlineBadge} title={onlineUsers.join(', ')}>
+            🟢 {onlineCount} {onlineCount === 1 ? 'user' : 'users'} online
+          </span>
+        </div>
       </div>
       <div style={styles.right}>
         <ConnectionStatus status={status} />
@@ -39,6 +47,12 @@ const styles = {
     flexDirection: 'column',
     gap: '0.25rem',
   },
+  subRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    flexWrap: 'wrap',
+  },
   title: {
     fontSize: '1.25rem',
     fontWeight: '700',
@@ -51,6 +65,15 @@ const styles = {
     fontSize: '0.8125rem',
     color: '#94a3b8',
     margin: 0,
+  },
+  divider: {
+    color: '#475569',
+    fontSize: '0.75rem',
+  },
+  onlineBadge: {
+    fontSize: '0.75rem',
+    color: '#34d399',
+    fontWeight: '500',
   },
   usernameHighlight: {
     color: '#818cf8',
