@@ -6,6 +6,7 @@ let socket = null;
 
 export const getSocket = () => {
   if (!socket) {
+    console.log('[Socket] Connecting to Socket URL:', SOCKET_URL);
     socket = io(SOCKET_URL, {
       autoConnect: false,
       transports: ['websocket', 'polling'],
