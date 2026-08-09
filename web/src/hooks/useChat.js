@@ -5,6 +5,7 @@ import { getSocket } from '../services/socket';
 export const useChat = (username) => {
   const [messages, setMessages] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [typingUsers, setTypingUsers] = useState([]);
   const [connectionStatus, setConnectionStatus] = useState('connecting'); // 'connecting' | 'connected' | 'disconnected'
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -56,6 +57,7 @@ export const useChat = (username) => {
 
     const onDisconnect = () => {
       setConnectionStatus('disconnected');
+      setTypingUsers([]);
     };
 
     const onConnectError = () => {
@@ -86,6 +88,20 @@ export const useChat = (username) => {
     const onUserOffline = (data) => {
       if (!data?.username) return;
       setOnlineUsers((prev) => prev.filter((u) => u !== data.username));
+      setTypingUsers((prev) => prev.filter((u) => u !== data.username));
+    };
+
+    const onUserTyping = (data) => {
+      if (!data?.username || data.username === username) return;
+      setTypingUsers((prev) => {
+        if (prev.includes(data.username)) return prev;
+        return [...prev, data.username];
+      });
+    };
+
+    const onUserStoppedTyping = (data) => {
+      if (!data?.username) return;
+      setTypingUsers((prev) => prev.filter((u) => u !== data.username));
     };
 
     socket.on('connect', onConnect);
@@ -95,6 +111,8 @@ export const useChat = (username) => {
     socket.on('online_users', onOnlineUsers);
     socket.on('user_online', onUserOnline);
     socket.on('user_offline', onUserOffline);
+    socket.on('user_typing', onUserTyping);
+    socket.on('user_stopped_typing', onUserStoppedTyping);
 
     return () => {
       socket.off('connect', onConnect);
@@ -104,10 +122,27 @@ export const useChat = (username) => {
       socket.off('online_users', onOnlineUsers);
       socket.off('user_online', onUserOnline);
       socket.off('user_offline', onUserOffline);
+      socket.off('user_typing', onUserTyping);
+      socket.off('user_stopped_typing', onUserStoppedTyping);
     };
   }, [username, loadHistory]);
 
-  // 3. Send message via Socket.io acknowledgement
+  // 3. Emit typing events
+  const sendTypingStart = useCallback(() => {
+    const socket = socketRef.current || getSocket();
+    if (socket && socket.connected && username) {
+      socket.emit('typing_start', { username });
+    }
+  }, [username]);
+
+  const sendTypingStop = useCallback(() => {
+    const socket = socketRef.current || getSocket();
+    if (socket && socket.connected && username) {
+      socket.emit('typing_stop', { username });
+    }
+  }, [username]);
+
+  // 4. Send message via Socket.io acknowledgement
   const sendMessage = useCallback(
     async (messageText) => {
       const socket = socketRef.current || getSocket();
@@ -136,10 +171,13 @@ export const useChat = (username) => {
   return {
     messages,
     onlineUsers,
+    typingUsers,
     connectionStatus,
     isLoading,
     error,
     sendMessage,
+    sendTypingStart,
+    sendTypingStop,
     refetchHistory: loadHistory,
   };
 };

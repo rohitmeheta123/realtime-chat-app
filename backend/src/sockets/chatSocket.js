@@ -48,6 +48,34 @@ export const initSocket = (server) => {
       }
     });
 
+    // Handle typing_start event
+    socket.on(SOCKET_EVENTS.TYPING_START, (payload) => {
+      try {
+        const { username } = payload || {};
+        if (!username || typeof username !== 'string' || username.trim().length === 0) {
+          return;
+        }
+        const trimmed = username.trim();
+        socket.broadcast.emit(SOCKET_EVENTS.USER_TYPING, { username: trimmed });
+      } catch (error) {
+        console.error(`[Socket Error] typing_start failed for socket ${socket.id}:`, error);
+      }
+    });
+
+    // Handle typing_stop event
+    socket.on(SOCKET_EVENTS.TYPING_STOP, (payload) => {
+      try {
+        const { username } = payload || {};
+        if (!username || typeof username !== 'string' || username.trim().length === 0) {
+          return;
+        }
+        const trimmed = username.trim();
+        socket.broadcast.emit(SOCKET_EVENTS.USER_STOPPED_TYPING, { username: trimmed });
+      } catch (error) {
+        console.error(`[Socket Error] typing_stop failed for socket ${socket.id}:`, error);
+      }
+    });
+
     // Handle send_message event
     socket.on(SOCKET_EVENTS.SEND_MESSAGE, async (payload, callback) => {
       const ack = typeof callback === 'function' ? callback : () => {};
@@ -88,11 +116,10 @@ export const initSocket = (server) => {
 
       const { username, isUserOffline } = onlineUsersService.removeUser(socket.id);
 
-      // Only broadcast user_offline if no active sockets remain for this username
+      // Only broadcast user_offline and user_stopped_typing if no active sockets remain for this username
       if (username && isUserOffline) {
-        socket.broadcast.emit(SOCKET_EVENTS.USER_OFFLINE, {
-          username,
-        });
+        socket.broadcast.emit(SOCKET_EVENTS.USER_OFFLINE, { username });
+        socket.broadcast.emit(SOCKET_EVENTS.USER_STOPPED_TYPING, { username });
       }
     });
   });

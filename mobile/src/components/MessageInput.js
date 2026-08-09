@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,15 +8,58 @@ import {
   ActivityIndicator,
 } from 'react-native';
 
-const MessageInput = ({ onSendMessage, isConnected }) => {
+const MessageInput = ({ onSendMessage, onTypingStart, onTypingStop, isConnected }) => {
   const [text, setText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [sendError, setSendError] = useState('');
+  const isTypingRef = useRef(false);
+  const typingTimerRef = useRef(null);
+
+  const stopTyping = () => {
+    if (typingTimerRef.current) {
+      clearTimeout(typingTimerRef.current);
+      typingTimerRef.current = null;
+    }
+    if (isTypingRef.current) {
+      isTypingRef.current = false;
+      if (onTypingStop) onTypingStop();
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      stopTyping();
+    };
+  }, []);
+
+  const handleChangeText = (val) => {
+    setText(val);
+    if (sendError) setSendError('');
+
+    if (!val.trim()) {
+      stopTyping();
+      return;
+    }
+
+    if (!isTypingRef.current) {
+      isTypingRef.current = true;
+      if (onTypingStart) onTypingStart();
+    }
+
+    if (typingTimerRef.current) {
+      clearTimeout(typingTimerRef.current);
+    }
+
+    typingTimerRef.current = setTimeout(() => {
+      stopTyping();
+    }, 1500);
+  };
 
   const handleSend = async () => {
     const trimmed = text.trim();
     if (!trimmed || isSubmitting || !isConnected) return;
 
+    stopTyping();
     setIsSubmitting(true);
     setSendError('');
 
@@ -45,7 +88,7 @@ const MessageInput = ({ onSendMessage, isConnected }) => {
         <TextInput
           style={styles.input}
           value={text}
-          onChangeText={setText}
+          onChangeText={handleChangeText}
           placeholder={isConnected ? 'Type a message...' : 'Connecting...'}
           placeholderTextColor="#64748b"
           editable={isConnected && !isSubmitting}

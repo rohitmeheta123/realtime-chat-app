@@ -53,7 +53,8 @@ realtime-chat-app/
 │   │   │   ├── ConnectionStatus.jsx
 │   │   │   ├── MessageBubble.jsx
 │   │   │   ├── MessageInput.jsx
-│   │   │   └── MessageList.jsx
+│   │   │   ├── MessageList.jsx
+│   │   │   └── TypingIndicator.jsx
 │   │   ├── pages/
 │   │   │   └── ChatPage.jsx
 │   │   ├── services/
@@ -83,7 +84,8 @@ realtime-chat-app/
 │   │   │   ├── ConnectionStatus.js
 │   │   │   ├── MessageBubble.js
 │   │   │   ├── MessageInput.js
-│   │   │   └── MessageList.js
+│   │   │   ├── MessageList.js
+│   │   │   └── TypingIndicator.js
 │   │   ├── screens/
 │   │   │   ├── ChatScreen.js
 │   │   │   └── UsernameScreen.js
@@ -194,3 +196,13 @@ Scan the QR code with **Expo Go** on an Android/iOS device or press `a` / `i` to
 - Multiple active sockets per username (e.g. Web browser tab + Mobile app) are tracked cleanly.
 - A user is marked `user_online` when their 1st socket connects, and marked `user_offline` only when their last remaining active socket disconnects.
 - Restarting the backend resets the transient online registry; connected clients automatically re-register via `join_chat` upon Socket.io reconnection.
+
+---
+
+## Typing Indicator
+
+- Typing indicator state is transient and transmitted via Socket.io (`typing_start`, `typing_stop`, `user_typing`, `user_stopped_typing`).
+- Typing state is **not** persisted to MongoDB.
+- Uses a **1500ms debounce** on client input fields to prevent unnecessary network traffic.
+- Typing indicators automatically disappear when the user stops typing, sends a message, or disconnects.
+- Self-notifications are suppressed so a user does not see their own typing status.
