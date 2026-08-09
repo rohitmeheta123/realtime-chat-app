@@ -1,10 +1,12 @@
 import express from 'express';
-import { getMessages, sendMessage } from '../controllers/messageController.js';
+import {
+  createMessageController,
+  getMessagesController,
+} from '../controllers/messageController.js';
 
 const router = express.Router();
 
-// Placeholder routes for message API
-router.get('/', getMessages);
-router.post('/', sendMessage);
+router.post('/', createMessageController);
+router.get('/', getMessagesController);
 
 export default router;
