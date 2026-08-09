@@ -1,0 +1,56 @@
+services:
+  mongodb:
+    image: mongo:6
+    container_name: chat_mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - chat_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: chat_backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - MONGODB_URI=mongodb://mongodb:27017/realtime_chat
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      - mongodb
+    networks:
+      - chat_network
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: chat_web
+    restart: always
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:5000
+      - VITE_SOCKET_URL=http://localhost:5000
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - chat_network
+
+volumes:
+  mongodb_data:
+
+networks:
+  chat_network:
+    driver: bridge
